@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <cstdlib>
 #include <libpq-fe.h>
 
@@ -26,7 +27,20 @@ int main() {
 
   std::cout << "Connected to: " << PQdb(conn) << std::endl;
 
-  PGresult *res = PQexec(conn, "SELECT * FROM category");
+  PGresult *prep = PQprepare(conn, "get_category", "SELECT * FROM category WHERE id > $1", 1, nullptr);
+  if (PQresultStatus(prep) != PGRES_COMMAND_OK) {
+    std::cerr << "Prepare failed: " << PQerrorMessage(conn) << std::endl;
+    PQclear(prep);
+    PQfinish(conn);
+    return 1;
+  }
+  PQclear(prep);
+
+  std::vector<std::string> params = {"30"};
+  std::vector<const char *> paramPtrs;
+  for (const auto &p : params) paramPtrs.push_back(p.c_str());
+
+  PGresult *res = PQexecPrepared(conn, "get_category", static_cast<int>(paramPtrs.size()), paramPtrs.data(), nullptr, nullptr, 0);
 
   if (PQresultStatus(res) != PGRES_TUPLES_OK) {
     std::cerr << "Query failed: " << PQerrorMessage(conn) << std::endl;

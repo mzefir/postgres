@@ -21,7 +21,9 @@ set(TestProjectExecutable "tests-${ProjectExecutable}") # Executable name for su
 set(ProjectSrc
   "src/Dummy.cc"
   "src/Hello.cc"
+  "src/Orm/Connection.cc"
   "src/Orm/Database.cc"
+  "src/Orm/RawResult.cc"
 )
 
 # Tests source files
