@@ -20,4 +20,11 @@ export REPO_ROOT="`pwd -P`/"
 #export CC=/usr/bin/clang
 #export CXX=/usr/bin/clang++
 
+# PostgreSQL connection parameters (used by the postgres executable)
+export ZEF_DBHOST=localhost
+export ZEF_DBPORT=5432
+export ZEF_DBNAME=postgres
+export ZEF_DBUSER=postgres
+export ZEF_DBPASS=
+
 cd $CURRENT_DIR

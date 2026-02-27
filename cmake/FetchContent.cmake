@@ -24,6 +24,9 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable("zeflogger${DebugAppend}")
 FetchContent_MakeAvailable(googletest)
 
+find_package(PostgreSQL REQUIRED)
+
 set(ProjectExternalLibraries
   "zeflogger${DebugAppend}"
+  PostgreSQL::PostgreSQL
 )
