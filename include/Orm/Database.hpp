@@ -1,20 +1,20 @@
 #pragma once
 
+#include "Orm/DatabaseIf.hpp"
 #include "Orm/Connection.hpp"
-#include <memory>
 #include <string>
 
 namespace Zef::Orm {
 
-class Database {
+class Database : public DatabaseIf {
 public:
   Database() = delete;
   Database(const Database &) = delete;
   Database &operator=(const Database &) = delete;
   Database(std::string host, std::string port, std::string dbName, std::string user, std::string password);
-  ~Database() = default;
+  ~Database() override = default;
 
-  std::unique_ptr<Connection> CreateConnection();
+  std::unique_ptr<ConnectionIf> CreateConnection() override;
 
 private:
   std::string m_host;

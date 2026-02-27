@@ -1,20 +1,21 @@
 #pragma once
 
+#include "Orm/RawResultIf.hpp"
 #include <string>
 #include <vector>
 
 namespace Zef::Orm {
 
-class RawResult {
+class RawResult : public RawResultIf {
 public:
   RawResult() = default;
-  ~RawResult() = default;
+  ~RawResult() override = default;
 
-  void AddColumn(std::string columnName);
-  void AddRow(std::vector<std::string> row);
+  void AddColumn(std::string columnName) override;
+  void AddRow(std::vector<std::string> row) override;
 
-  const std::vector<std::string> &GetColumnNames() const;
-  const std::vector<std::vector<std::string>> &GetData() const;
+  const std::vector<std::string> &GetColumnNames() const override;
+  const std::vector<std::vector<std::string>> &GetData() const override;
 
 private:
   std::vector<std::string> m_columnNames;
