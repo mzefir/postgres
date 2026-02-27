@@ -11,7 +11,7 @@ public:
   RawResult() = default;
   ~RawResult() override = default;
 
-  void AddColumn(std::string columnName) override;
+  void AddColumn(const std::string &columnName) override;
   void AddRow(std::vector<std::string> row) override;
 
   const std::vector<std::string> &GetColumnNames() const override;

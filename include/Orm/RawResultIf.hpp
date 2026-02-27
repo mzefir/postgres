@@ -9,7 +9,7 @@ class RawResultIf {
 public:
   virtual ~RawResultIf() = default;
 
-  virtual void AddColumn(std::string columnName) = 0;
+  virtual void AddColumn(const std::string &columnName) = 0;
   virtual void AddRow(std::vector<std::string> row) = 0;
 
   virtual const std::vector<std::string> &GetColumnNames() const = 0;

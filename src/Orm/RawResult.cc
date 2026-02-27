@@ -2,8 +2,8 @@
 
 namespace Zef::Orm {
 
-void RawResult::AddColumn(std::string columnName) {
-  m_columnNames.push_back(std::move(columnName));
+void RawResult::AddColumn(const std::string &columnName) {
+  m_columnNames.push_back(columnName);
 }
 
 void RawResult::AddRow(std::vector<std::string> row) {
