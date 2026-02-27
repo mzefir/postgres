@@ -1,0 +1,4 @@
+-*/external/*
+-*/build/*
+-*/build14/*
+-/usr/*

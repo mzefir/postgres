@@ -1,0 +1,36 @@
+# Template project
+
+## TODO
+
+* ```docs/*```
+  * Folder has some example pages, need to wipe it out
+* ```include/Dummy.hpp```
+  * Example file, to delete - purpose is to show mock testing
+* ```inlcude/DummyIf.hpp```
+  * Example file, to delete - purpose is to show mock testing
+* ```include/Hello.hpp```
+  * Example file, to delete.
+* ```src/Dummy.cc```
+  * Example file, to delete - purpose is to show mock testing
+* ```src/Hello.cc```
+  * Example file, to delete.
+* ```utils/install_exclude```
+  * Clear the file.
+  * Insert here all header files which should excluded from library installation process.
+* ```mkdocs.yml```
+  * Update site_name
+  * Update nav section
+* ```TODO.txt```
+  * list of action to improve template, delete
+
+## How to build
+```
+source utils/setup_env
+mkdir build
+cd build
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+# or
+cmake -G Ninja -DCMAKE_BUILD_TYPE=RELEASE ..
+ninja -j8
+ninja install
+```

@@ -1,0 +1,10 @@
+.cache/*
+bin/*
+out/*
+**/build/*
+**/release/*
+setup_env
+docs/**/*.svg
+.env
+
+!**.gitkeep

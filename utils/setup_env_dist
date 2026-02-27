@@ -1,0 +1,23 @@
+#!/bin/sh
+CURRENT_DIR="$PWD"
+cd "$(dirname "$BASH_SOURCE")"
+cd ..
+
+# installation directory
+# libraries will be in $INSTALL_DIR/$ProjectExecutable/$ProjectVersion/lib
+# headers will be in $INSTALL_DIR/$ProjectExecutable/$ProjectVersion/include
+# newest libraries will be also copied to $INSTALL_DIR/lib
+# newest headers will be also copied to $INSTALL_DIR/include
+INSTALL_DIR=/home/$USER/opt
+
+# root path to repository
+export REPO_ROOT="`pwd -P`/"
+
+# forcibly disable code coverage
+#export DISABLE_CODE_COVERAGE="DISABLE_CODE_COVERAGE"
+
+## If doesnt exists out of the box, set paths to compiler before first cmake usage.
+#export CC=/usr/bin/clang
+#export CXX=/usr/bin/clang++
+
+cd $CURRENT_DIR

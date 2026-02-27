@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Main",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}/build"
+      },
+      "command": "ninja",
+      "args": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "Generated task to build project using CMake and Ninja"
+    }
+  ]
+}

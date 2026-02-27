@@ -1,0 +1,15 @@
+@startuml bob
+participant Alice
+actor Bob
+
+ref over Alice, Bob : [About](/about/) - go and check
+
+Alice -> Bob : hello
+note left [[http://plantuml.com/start]]
+  a note with a link
+end note
+ref over Bob
+  This can be on
+  several lines
+end ref
+@enduml
