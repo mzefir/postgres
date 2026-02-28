@@ -16,14 +16,6 @@ template<typename T>
   requires std::derived_from<T, EntityIf>
 class Repository {
 public:
-  static Repository<T> &GetInstance() {
-    static Repository<T> instance;
-    return instance;
-  }
-
-  Repository(const Repository &) = delete;
-  Repository &operator=(const Repository &) = delete;
-
   static std::optional<std::vector<T>> GetAll(std::shared_ptr<DbConnectionIf> conn) {
     T proto;
     const auto *schema = proto.GetSchema();
@@ -65,10 +57,6 @@ public:
     }
     return result;
   }
-
-private:
-  Repository() = default;
-  ~Repository() = default;
 };
 
 } // namespace Zef::Orm
