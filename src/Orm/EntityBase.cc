@@ -27,19 +27,19 @@ std::optional<std::string> EntityBase::GetString(const std::string &columnName) 
 }
 
 void EntityBase::Set(const std::string &columnName, int value) {
-  Set(columnName, std::variant<int, bool, float, std::string>{value});
+  Set(columnName, EntityBase::ColumnValue{value});
 }
 
 void EntityBase::Set(const std::string &columnName, bool value) {
-  Set(columnName, std::variant<int, bool, float, std::string>{value});
+  Set(columnName, EntityBase::ColumnValue{value});
 }
 
 void EntityBase::Set(const std::string &columnName, float value) {
-  Set(columnName, std::variant<int, bool, float, std::string>{value});
+  Set(columnName, EntityBase::ColumnValue{value});
 }
 
 void EntityBase::Set(const std::string &columnName, std::string value) {
-  Set(columnName, std::variant<int, bool, float, std::string>{std::move(value)});
+  Set(columnName, EntityBase::ColumnValue{std::move(value)});
 }
 
 } // namespace Zef::Orm
