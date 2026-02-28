@@ -25,8 +25,10 @@ FetchContent_MakeAvailable("zeflogger${DebugAppend}")
 FetchContent_MakeAvailable(googletest)
 
 find_package(PostgreSQL REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 set(ProjectExternalLibraries
   "zeflogger${DebugAppend}"
   PostgreSQL::PostgreSQL
+  OpenSSL::Crypto
 )

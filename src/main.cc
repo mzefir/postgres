@@ -1,8 +1,8 @@
+#include "Entity/Category.hpp"
 #include "Orm/DbConnection.hpp"
+#include "Orm/Repository.hpp"
 #include <cstdlib>
 #include <iostream>
-#include <string>
-#include <vector>
 
 static const char *getenv_or(const char *name, const char *fallback) {
   const char *val = std::getenv(name);
@@ -18,33 +18,16 @@ int main() {
     getenv_or("ZEF_DBPASS", "")
   );
 
-  auto conn = Zef::Orm::DbConnection::CreateConnection();
-
-  const std::vector<std::string> params = {"30"};
-  auto result = conn->GetAll("SELECT * FROM category WHERE id > $1", "get_category", params);
+  auto result = Zef::Orm::Repository<Zef::Entity::Category>::GetAll();
 
   if (!result) {
     std::cerr << "Query failed." << std::endl;
     return 1;
   }
 
-  const auto &data = result.value();
-
-  // Print column headers
-  const auto &cols = data->GetColumnNames();
-  for (size_t i = 0; i < cols.size(); ++i) {
-    std::cout << cols[i];
-    if (i < cols.size() - 1) std::cout << " | ";
-  }
-  std::cout << std::endl;
-
-  // Print rows
-  for (const auto &row : data->GetData()) {
-    for (size_t i = 0; i < row.size(); ++i) {
-      std::cout << row[i];
-      if (i < row.size() - 1) std::cout << " | ";
-    }
-    std::cout << std::endl;
+  for (const auto &category : *result) {
+    std::cout << "id=" << category.Id().value_or(-1)
+              << " title=" << category.GetString("title").value_or("") << std::endl;
   }
 
   return 0;

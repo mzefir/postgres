@@ -3,7 +3,7 @@
 
 namespace Zef::Entity {
 
-const std::string Category::s_tableName{"categories"};
+const std::string Category::s_tableName{"category"};
 
 const std::string &Category::GetTableName() const { return s_tableName; }
 
