@@ -1,4 +1,4 @@
-#include "Orm/Database.hpp"
+#include "Orm/DbConnection.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -10,7 +10,7 @@ static const char *getenv_or(const char *name, const char *fallback) {
 }
 
 int main() {
-  Zef::Orm::Database db(
+  Zef::Orm::DbConnection::SetConnectionParams(
     getenv_or("ZEF_DBHOST", "localhost"),
     getenv_or("ZEF_DBPORT", "5432"),
     getenv_or("ZEF_DBNAME", "postgres"),
@@ -18,7 +18,7 @@ int main() {
     getenv_or("ZEF_DBPASS", "")
   );
 
-  auto conn = db.CreateConnection();
+  auto conn = Zef::Orm::DbConnection::CreateConnection();
 
   const std::vector<std::string> params = {"30"};
   auto result = conn->GetAll("SELECT * FROM category WHERE id > $1", "get_category", params);

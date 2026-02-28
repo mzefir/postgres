@@ -8,9 +8,9 @@
 
 namespace Zef::Orm {
 
-class ConnectionIf {
+class DbConnectionIf {
 public:
-  virtual ~ConnectionIf() = default;
+  virtual ~DbConnectionIf() = default;
 
   virtual std::optional<std::unique_ptr<RawResultIf>> GetAll(const std::string &query) = 0;
   virtual std::optional<std::unique_ptr<RawResultIf>> GetAll(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) = 0;

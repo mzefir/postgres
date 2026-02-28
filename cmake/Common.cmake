@@ -21,14 +21,14 @@ set(TestProjectExecutable "tests-${ProjectExecutable}") # Executable name for su
 set(ProjectOrmSrc
   "src/Orm/Column.cc"
   "src/Orm/EntityBase.cc"
-  "src/Orm/Connection.cc"
-  "src/Orm/Database.cc"
+  "src/Orm/DbConnection.cc"
   "src/Orm/RawResult.cc"
   "src/Orm/TableSchema.cc"
 )
 
 set(ProjectAppSrc
   "src/Hello.cc"
+  "src/Entity/Category.cc"
 )
 
 # Tests source files

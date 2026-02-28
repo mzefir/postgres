@@ -2,11 +2,11 @@
 
 #include <testing.hpp>
 
-#include "Orm/ConnectionIf.hpp"
+#include "Orm/DbConnectionIf.hpp"
 
 namespace Zef::Testing::Orm {
 
-class ConnectionMock : public Zef::Orm::ConnectionIf {
+class ConnectionMock : public Zef::Orm::DbConnectionIf {
 public:
   MOCK_METHOD(std::optional<std::unique_ptr<Zef::Orm::RawResultIf>>, GetAll, (const std::string &query), (override));
   MOCK_METHOD(std::optional<std::unique_ptr<Zef::Orm::RawResultIf>>, GetAll, (const std::string &query, const std::string &stmtName, const std::vector<std::string> &params), (override));

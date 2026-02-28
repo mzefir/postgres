@@ -1,4 +1,4 @@
-#include "Orm/Connection.hpp"
+#include "Orm/DbConnection.hpp"
 #include "Orm/RawResult.hpp"
 #include <libpq-fe.h>
 #include <optional>
@@ -6,16 +6,34 @@
 
 namespace Zef::Orm {
 
-Connection::Connection(PGconn *conn) : m_conn(conn) {}
+DbConnectionParams DbConnection::s_connectionParams;
 
-Connection::~Connection() {
+void DbConnection::SetConnectionParams(std::string host, std::string port, std::string dbName, std::string user, std::string password) {
+  s_connectionParams = {std::move(host), std::move(port), std::move(dbName), std::move(user), std::move(password)};
+}
+
+std::unique_ptr<DbConnectionIf> DbConnection::CreateConnection() {
+  std::string connStr =
+    "host="      + s_connectionParams.host +
+    " port="     + s_connectionParams.port +
+    " dbname="   + s_connectionParams.dbName +
+    " user="     + s_connectionParams.user +
+    " password=" + s_connectionParams.password;
+
+  PGconn *pgconn = PQconnectdb(connStr.c_str());
+  return std::unique_ptr<DbConnection>(new DbConnection(pgconn));
+}
+
+DbConnection::DbConnection(PGconn *conn) : m_conn(conn) {}
+
+DbConnection::~DbConnection() {
   if (m_conn) {
     PQfinish(m_conn);
     m_conn = nullptr;
   }
 }
 
-std::optional<std::unique_ptr<RawResultIf>> Connection::GetAll(const std::string &query) {
+std::optional<std::unique_ptr<RawResultIf>> DbConnection::GetAll(const std::string &query) {
   PGresult *res = PQexec(m_conn, query.c_str());
 
   if (PQresultStatus(res) != PGRES_TUPLES_OK) {
@@ -42,7 +60,7 @@ std::optional<std::unique_ptr<RawResultIf>> Connection::GetAll(const std::string
   return result;
 }
 
-std::optional<std::unique_ptr<RawResultIf>> Connection::GetAll(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) {
+std::optional<std::unique_ptr<RawResultIf>> DbConnection::GetAll(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) {
   if (m_preparedStatements.find(stmtName) == m_preparedStatements.end()) {
     PGresult *prep = PQprepare(m_conn, stmtName.c_str(), query.c_str(), 0, nullptr);
     if (PQresultStatus(prep) != PGRES_COMMAND_OK) {
