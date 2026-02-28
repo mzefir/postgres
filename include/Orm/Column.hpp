@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Orm/Defs.hpp"
+#include "Orm/ColumnIf.hpp"
 #include <string>
 
 namespace Zef::Orm {
 
-class Column {
+class Column : public ColumnIf {
 public:
   Column() = delete;
   Column(const Column &) = delete;
@@ -14,11 +14,11 @@ public:
   Column &operator=(Column &&) = delete;
 
   Column(std::string name, ColumnType type, ColumnFlags flags);
-  ~Column() = default;
+  ~Column() override = default;
 
-  const std::string &GetName() const;
-  ColumnType GetType() const;
-  ColumnFlags GetFlags() const;
+  const std::string &GetName() const override;
+  ColumnType GetType() const override;
+  ColumnFlags GetFlags() const override;
 
 private:
   std::string m_name;

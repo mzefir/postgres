@@ -19,16 +19,17 @@ set(TestProjectExecutable "tests-${ProjectExecutable}") # Executable name for su
 # - to build an executable of application
 # - to build a library which is included as dependency for tests subproject
 set(ProjectSrc
-  "src/Dummy.cc"
   "src/Hello.cc"
   "src/Orm/Column.cc"
   "src/Orm/Connection.cc"
   "src/Orm/Database.cc"
   "src/Orm/RawResult.cc"
+  "src/Orm/TableSchema.cc"
 )
 
 # Tests source files
 set(TestsSrc
   "test/src/HelloTest.cc"
   "test/src/Orm/ColumnTest.cc"
+  "test/src/Orm/TableSchemaTest.cc"
 )
