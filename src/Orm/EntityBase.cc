@@ -2,6 +2,12 @@
 
 namespace Zef::Orm {
 
+std::optional<EntityBase::ColumnValue> EntityBase::Get(const std::string &columnName) const {
+  auto it = m_data.find(columnName);
+  if (it == m_data.end()) return std::nullopt;
+  return it->second;
+}
+
 std::optional<int> EntityBase::GetInt(const std::string &columnName) const {
   auto val = Get(columnName);
   if (!val || !std::holds_alternative<int>(*val)) return std::nullopt;
@@ -41,5 +47,11 @@ void EntityBase::Set(const std::string &columnName, float value) {
 void EntityBase::Set(const std::string &columnName, std::string value) {
   Set(columnName, EntityBase::ColumnValue{std::move(value)});
 }
+
+void EntityBase::Set(const std::string &columnName, ColumnValue value) {
+  m_data[columnName] = std::move(value);
+}
+
+std::optional<int> EntityBase::Id() const { return GetInt("id"); }
 
 } // namespace Zef::Orm
