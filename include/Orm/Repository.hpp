@@ -1,8 +1,12 @@
 #pragma once
 
+#include "Orm/EntityIf.hpp"
+#include <concepts>
+
 namespace Zef::Orm {
 
 template<typename T>
+  requires std::derived_from<T, EntityIf>
 class Repository {
 public:
   static Repository<T> &GetInstance() {
