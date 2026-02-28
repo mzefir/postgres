@@ -30,4 +30,5 @@ set(ProjectSrc
 # Tests source files
 set(TestsSrc
   "test/src/HelloTest.cc"
+  "test/src/Orm/ColumnTest.cc"
 )
