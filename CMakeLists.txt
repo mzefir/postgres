@@ -9,7 +9,7 @@ include_directories(".")
 include_directories("include")
 
 add_executable (${ProjectExecutable}
-  "src/main.cc" ${ProjectSrc}
+  "src/main.cc" ${ProjectOrmSrc} ${ProjectAppSrc}
 )
 target_link_libraries(${ProjectExecutable} PRIVATE ${ProjectExternalLibraries})
 set_property(TARGET ${ProjectExecutable} PROPERTY CXX_STANDARD 20)
@@ -18,7 +18,7 @@ include_directories("test/include")
 include_directories("test/mock")
 
 add_library(${ProjectExecutableTestLib} STATIC
-  ${ProjectSrc}
+  ${ProjectOrmSrc} ${ProjectAppSrc}
 )
 target_compile_definitions(${ProjectExecutableTestLib} PRIVATE UNITTEST=1)
 set_property(TARGET ${ProjectExecutableTestLib} PROPERTY CXX_STANDARD 20)
@@ -33,7 +33,7 @@ add_dependencies(${TestProjectExecutable} ${ProjectExecutableTestLib} GTest::gte
 
 ## library section
 add_library("${ProjectLibrary}${DebugAppend}"
-  ${ProjectSrc}
+  ${ProjectOrmSrc}
 )
 target_link_libraries("${ProjectLibrary}${DebugAppend}" PRIVATE ${ProjectExternalLibraries})
 target_include_directories("${ProjectLibrary}${DebugAppend}" PUBLIC
