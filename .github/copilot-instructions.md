@@ -32,22 +32,33 @@ To disable code coverage: `export DISABLE_CODE_COVERAGE="DISABLE_CODE_COVERAGE"`
 
 ## Architecture
 
-- **`include/`** — Public headers (`.hpp`). Contains interfaces (`*If.hpp`) and concrete classes.
-- **`src/`** — Implementations (`.cc`) and `main.cc`.
+- **`include/Orm/`** — Public ORM headers: `DatabaseIf.hpp`, `ConnectionIf.hpp`, `RawResultIf.hpp`, `Column.hpp`, `Defs.hpp`, `Repository.hpp`.
+- **`src/Orm/`** — Implementations wrapping `libpq` (PostgreSQL C API).
 - **`test/src/`** — GoogleTest test files.
-- **`test/mock/`** — GMock mock classes (`*Mock.hpp`) implementing the `*If` interfaces.
-- **`cmake/`** — `Common.cmake` (project config), `FetchContent.cmake` (deps: `zeflogger` v1.2, `googletest` v1.14.0), `CodeCoverage.cmake`.
-- **`utils/`** — `setup_env` (env setup), `format_repository.sh`, `generate_docs.sh`.
+- **`test/mock/Orm/`** — GMock mocks mirroring the `include/Orm/` structure.
+- **`test/include/testing.hpp`** — Unified test header; include this instead of including gtest/gmock directly.
+- **`cmake/Common.cmake`** — Defines `ProjectSrc` and `TestsSrc` lists. **New `.cc` files and test files must be added here.**
+- **`cmake/FetchContent.cmake`** — External deps: `zeflogger` v1.2, `googletest` v1.14.0, `PostgreSQL::PostgreSQL`.
+
+**ORM object model:** `Database` creates `Connection` objects via `CreateConnection()`. `Connection` executes queries and returns `std::optional<std::unique_ptr<RawResultIf>>`. `RawResult` stores rows as `vector<vector<string>>` with a parallel column-name vector. `Repository<T>` is a per-type singleton (currently a scaffold).
+
+`Connection` has a protected constructor and declares `Database` as a friend — it is only instantiable through `Database::CreateConnection()`.
 
 The test build compiles a static lib (`testlibpostgres`) with `-DUNITTEST=1`, then links it into the test executable. This flag can be used to conditionally expose internals for testing.
 
 ## Key Conventions
 
-**Namespaces:** Production code uses `Zef::Template`; test mocks use `Zef::Testing`.
+**Namespaces:** Production ORM code uses `Zef::Orm`; test mocks use `Zef::Testing::Orm`.
 
-**Interface pattern:** Abstract base classes named `*If` (e.g., `DummyIf`) are used for dependency injection. Mock implementations in `test/mock/` follow the `*Mock` naming convention.
+**Interface pattern:** Abstract base classes named `*If` (e.g., `ConnectionIf`). Mock implementations in `test/mock/` follow the `*Mock` naming convention and mirror the `include/` subdirectory structure.
 
 **Dependency injection:** Classes accept dependencies as `std::shared_ptr<InterfaceType>`.
+
+**Error handling:** Query methods return `std::optional`, with `std::nullopt` on failure. No exceptions are thrown by ORM code.
+
+**Member variables:** Prefixed with `m_` (e.g., `m_conn`, `m_columnNames`).
+
+**`ColumnFlags` bitmask:** Flags are combined with `operator|` and tested with `operator&`, both defined in `Defs.hpp`.
 
 **Naming:** PascalCase for classes and methods. Source files use `.cc` / `.hpp`.
 
