@@ -4,7 +4,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(ProjectTitle "ZefPostgres")
 set(ProjectDescription "A lightweight C++20 ORM library for PostgreSQL.")
-set(ProjectVersion "1.1.0")
+set(ProjectVersion "1.1.1")
 set(ProjectExecutable "postgres")
 
 # Project source files, insert only *.cc files. Do not add main.cc file but main.cc must be present in main directory.
