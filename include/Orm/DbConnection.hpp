@@ -18,6 +18,7 @@ public:
 
   static void SetConnectionParams(std::string host, std::string port, std::string dbName, std::string user, std::string password);
   static std::unique_ptr<DbConnectionIf> CreateConnection();
+  static void Shutdown();
 
   std::optional<std::unique_ptr<RawResultIf>> GetAll(const std::string &query) override;
   std::optional<std::unique_ptr<RawResultIf>> GetAll(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) override;

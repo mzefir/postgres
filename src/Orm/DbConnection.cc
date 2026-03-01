@@ -47,6 +47,13 @@ std::unique_ptr<DbConnectionIf> DbConnection::CreateConnection() {
   return db;
 }
 
+void DbConnection::Shutdown() {
+  std::unique_lock lock(s_connectionsMutex);
+  for (auto &[conn, slot] : s_connections)
+    PQfinish(conn);
+  s_connections.clear();
+}
+
 void DbConnection::PurgeStaleConnections() {
   for (auto it = s_connections.begin(); it != s_connections.end(); ) {
     if (it->second.owner == nullptr && PQstatus(it->first) != CONNECTION_OK) {

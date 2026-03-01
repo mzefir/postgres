@@ -30,5 +30,6 @@ int main() {
               << " title=" << category.GetString("title").value_or("") << std::endl;
   }
 
+  Zef::Orm::DbConnection::Shutdown();
   return 0;
 }
