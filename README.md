@@ -21,6 +21,16 @@ FetchContent_Declare(
   GIT_REPOSITORY git@github.com:mzefir/postgres.git
   GIT_TAG 1.0.0
 )
+FetchContent_MakeAvailable("zefpostgres${DebugAppend}")
+
+find_package(PostgreSQL REQUIRED)
+find_package(OpenSSL REQUIRED)
+
+target_link_libraries(<your_executable> PRIVATE 
+  "zefpostgres${DebugAppend}"
+  PostgreSQL::PostgreSQL
+  OpenSSL::Crypto
+)
 ```
 
 ## How to use
