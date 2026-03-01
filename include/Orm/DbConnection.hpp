@@ -26,12 +26,17 @@ public:
 private:
   DbConnection();
   void Initialize(PGconn *conn);
+  static void PurgeStaleConnections();
+
+  struct ConnectionSlot {
+    DbConnectionIf            *owner{nullptr};
+    std::unordered_set<std::string> preparedStatements;
+  };
 
   static DbConnectionParams s_connectionParams;
-  static std::map<PGconn *, DbConnectionIf *> s_connections;
+  static std::map<PGconn *, ConnectionSlot> s_connections;
 
   PGconn *m_conn{nullptr};
-  std::unordered_set<std::string> m_preparedStatements;
 };
 
 } // namespace Zef::Orm

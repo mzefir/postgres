@@ -8,20 +8,21 @@
 namespace Zef::Orm {
 
 DbConnectionParams DbConnection::s_connectionParams;
-std::map<PGconn *, DbConnectionIf *> DbConnection::s_connections;
+std::map<PGconn *, DbConnection::ConnectionSlot> DbConnection::s_connections;
 
 void DbConnection::SetConnectionParams(std::string host, std::string port, std::string dbName, std::string user, std::string password) {
   s_connectionParams = {std::move(host), std::move(port), std::move(dbName), std::move(user), std::move(password)};
 }
 
 std::unique_ptr<DbConnectionIf> DbConnection::CreateConnection() {
+  PurgeStaleConnections();
   auto db = std::unique_ptr<DbConnection>(new DbConnection());
 
   PGconn *pgconn = nullptr;
-  for (auto &[conn, owner] : s_connections) {
-    if (owner == nullptr) {
-      pgconn = conn;
-      owner  = db.get();
+  for (auto &[conn, slot] : s_connections) {
+    if (slot.owner == nullptr) {
+      pgconn       = conn;
+      slot.owner   = db.get();
       break;
     }
   }
@@ -35,11 +36,22 @@ std::unique_ptr<DbConnectionIf> DbConnection::CreateConnection() {
       " password=" + s_connectionParams.password;
 
     pgconn = PQconnectdb(connStr.c_str());
-    s_connections[pgconn] = db.get();
+    s_connections[pgconn].owner = db.get();
   }
 
   db->Initialize(pgconn);
   return db;
+}
+
+void DbConnection::PurgeStaleConnections() {
+  for (auto it = s_connections.begin(); it != s_connections.end(); ) {
+    if (it->second.owner == nullptr && PQstatus(it->first) != CONNECTION_OK) {
+      PQfinish(it->first);
+      it = s_connections.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
 DbConnection::DbConnection() {}
@@ -49,9 +61,9 @@ void DbConnection::Initialize(PGconn *conn) {
 }
 
 DbConnection::~DbConnection() {
-  for (auto &[conn, owner] : s_connections) {
-    if (owner == this) {
-      owner = nullptr;
+  for (auto &[conn, slot] : s_connections) {
+    if (slot.owner == this) {
+      slot.owner = nullptr;
       break;
     }
   }
@@ -85,14 +97,15 @@ std::optional<std::unique_ptr<RawResultIf>> DbConnection::GetAll(const std::stri
 }
 
 std::optional<std::unique_ptr<RawResultIf>> DbConnection::GetAll(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) {
-  if (m_preparedStatements.find(stmtName) == m_preparedStatements.end()) {
+  auto &preparedStatements = s_connections[m_conn].preparedStatements;
+  if (preparedStatements.find(stmtName) == preparedStatements.end()) {
     PGresult *prep = PQprepare(m_conn, stmtName.c_str(), query.c_str(), 0, nullptr);
     if (PQresultStatus(prep) != PGRES_COMMAND_OK) {
       PQclear(prep);
       return std::nullopt;
     }
     PQclear(prep);
-    m_preparedStatements.insert(stmtName);
+    preparedStatements.insert(stmtName);
   }
 
   std::vector<const char *> paramPtrs;
@@ -132,14 +145,15 @@ bool DbConnection::Exec(const std::string &query) {
 }
 
 bool DbConnection::Exec(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) {
-  if (m_preparedStatements.find(stmtName) == m_preparedStatements.end()) {
+  auto &preparedStatements = s_connections[m_conn].preparedStatements;
+  if (preparedStatements.find(stmtName) == preparedStatements.end()) {
     PGresult *prep = PQprepare(m_conn, stmtName.c_str(), query.c_str(), 0, nullptr);
     if (PQresultStatus(prep) != PGRES_COMMAND_OK) {
       PQclear(prep);
       return false;
     }
     PQclear(prep);
-    m_preparedStatements.insert(stmtName);
+    preparedStatements.insert(stmtName);
   }
 
   std::vector<const char *> paramPtrs;
