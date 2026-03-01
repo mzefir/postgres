@@ -4,6 +4,8 @@
 #include "Orm/DbConnectionParams.hpp"
 #include <libpq-fe.h>
 #include <map>
+#include <mutex>
+#include <shared_mutex>
 #include <unordered_set>
 
 namespace Zef::Orm {
@@ -35,6 +37,7 @@ private:
 
   static DbConnectionParams s_connectionParams;
   static std::map<PGconn *, ConnectionSlot> s_connections;
+  static std::shared_mutex s_connectionsMutex;
 
   PGconn *m_conn{nullptr};
 };

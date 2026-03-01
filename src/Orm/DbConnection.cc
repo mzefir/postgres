@@ -2,19 +2,23 @@
 #include "Orm/RawResult.hpp"
 #include <libpq-fe.h>
 #include <map>
+#include <mutex>
 #include <optional>
+#include <shared_mutex>
 #include <vector>
 
 namespace Zef::Orm {
 
 DbConnectionParams DbConnection::s_connectionParams;
 std::map<PGconn *, DbConnection::ConnectionSlot> DbConnection::s_connections;
+std::shared_mutex DbConnection::s_connectionsMutex;
 
 void DbConnection::SetConnectionParams(std::string host, std::string port, std::string dbName, std::string user, std::string password) {
   s_connectionParams = {std::move(host), std::move(port), std::move(dbName), std::move(user), std::move(password)};
 }
 
 std::unique_ptr<DbConnectionIf> DbConnection::CreateConnection() {
+  std::unique_lock lock(s_connectionsMutex);
   PurgeStaleConnections();
   auto db = std::unique_ptr<DbConnection>(new DbConnection());
 
@@ -61,6 +65,7 @@ void DbConnection::Initialize(PGconn *conn) {
 }
 
 DbConnection::~DbConnection() {
+  std::unique_lock lock(s_connectionsMutex);
   for (auto &[conn, slot] : s_connections) {
     if (slot.owner == this) {
       slot.owner = nullptr;
@@ -97,6 +102,7 @@ std::optional<std::unique_ptr<RawResultIf>> DbConnection::GetAll(const std::stri
 }
 
 std::optional<std::unique_ptr<RawResultIf>> DbConnection::GetAll(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) {
+  std::shared_lock lock(s_connectionsMutex);
   auto &preparedStatements = s_connections[m_conn].preparedStatements;
   if (preparedStatements.find(stmtName) == preparedStatements.end()) {
     PGresult *prep = PQprepare(m_conn, stmtName.c_str(), query.c_str(), 0, nullptr);
@@ -145,6 +151,7 @@ bool DbConnection::Exec(const std::string &query) {
 }
 
 bool DbConnection::Exec(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) {
+  std::shared_lock lock(s_connectionsMutex);
   auto &preparedStatements = s_connections[m_conn].preparedStatements;
   if (preparedStatements.find(stmtName) == preparedStatements.end()) {
     PGresult *prep = PQprepare(m_conn, stmtName.c_str(), query.c_str(), 0, nullptr);
