@@ -1,35 +1,59 @@
 #include "Orm/DbConnection.hpp"
 #include "Orm/RawResult.hpp"
 #include <libpq-fe.h>
+#include <map>
 #include <optional>
 #include <vector>
 
 namespace Zef::Orm {
 
 DbConnectionParams DbConnection::s_connectionParams;
+std::map<PGconn *, DbConnectionIf *> DbConnection::s_connections;
 
 void DbConnection::SetConnectionParams(std::string host, std::string port, std::string dbName, std::string user, std::string password) {
   s_connectionParams = {std::move(host), std::move(port), std::move(dbName), std::move(user), std::move(password)};
 }
 
 std::unique_ptr<DbConnectionIf> DbConnection::CreateConnection() {
-  std::string connStr =
-    "host="      + s_connectionParams.host +
-    " port="     + s_connectionParams.port +
-    " dbname="   + s_connectionParams.dbName +
-    " user="     + s_connectionParams.user +
-    " password=" + s_connectionParams.password;
+  auto db = std::unique_ptr<DbConnection>(new DbConnection());
 
-  PGconn *pgconn = PQconnectdb(connStr.c_str());
-  return std::unique_ptr<DbConnection>(new DbConnection(pgconn));
+  PGconn *pgconn = nullptr;
+  for (auto &[conn, owner] : s_connections) {
+    if (owner == nullptr) {
+      pgconn = conn;
+      owner  = db.get();
+      break;
+    }
+  }
+
+  if (!pgconn) {
+    std::string connStr =
+      "host="      + s_connectionParams.host +
+      " port="     + s_connectionParams.port +
+      " dbname="   + s_connectionParams.dbName +
+      " user="     + s_connectionParams.user +
+      " password=" + s_connectionParams.password;
+
+    pgconn = PQconnectdb(connStr.c_str());
+    s_connections[pgconn] = db.get();
+  }
+
+  db->Initialize(pgconn);
+  return db;
 }
 
-DbConnection::DbConnection(PGconn *conn) : m_conn(conn) {}
+DbConnection::DbConnection() {}
+
+void DbConnection::Initialize(PGconn *conn) {
+  m_conn = conn;
+}
 
 DbConnection::~DbConnection() {
-  if (m_conn) {
-    PQfinish(m_conn);
-    m_conn = nullptr;
+  for (auto &[conn, owner] : s_connections) {
+    if (owner == this) {
+      owner = nullptr;
+      break;
+    }
   }
 }
 
