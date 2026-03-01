@@ -1,36 +1,77 @@
-# Template project
+# Mini ORM for postgres
 
-## TODO
+## Overview
+A lightweight C++20 ORM library for PostgreSQL. It provides connection pooling via `DbConnection`,
+a typed `Repository<T>` for querying entities, and a schema/column abstraction built on top of `libpq`.
 
-* ```docs/*```
-  * Folder has some example pages, need to wipe it out
-* ```include/Dummy.hpp```
-  * Example file, to delete - purpose is to show mock testing
-* ```inlcude/DummyIf.hpp```
-  * Example file, to delete - purpose is to show mock testing
-* ```include/Hello.hpp```
-  * Example file, to delete.
-* ```src/Dummy.cc```
-  * Example file, to delete - purpose is to show mock testing
-* ```src/Hello.cc```
-  * Example file, to delete.
-* ```utils/install_exclude```
-  * Clear the file.
-  * Insert here all header files which should excluded from library installation process.
-* ```mkdocs.yml```
-  * Update site_name
-  * Update nav section
-* ```TODO.txt```
-  * list of action to improve template, delete
+## How to add this as library to your project
+
+Add to your CMakeLists.txt:
+
+```cmake
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(DebugAppend "d")
+else()
+  set(DebugAppend "")
+endif()
+
+# Library build for debug target has 'd' postfix
+FetchContent_Declare(
+  "zefpostgres${DebugAppend}"
+  GIT_REPOSITORY ssh://git@localhost/git/zef/cpp-postgres.git
+  GIT_TAG 1.0.0
+)
+```
+
+## How to use
+
+### Setting up the database connection
+
+Call `DbConnection::SetConnectionParams` once at startup, before creating any connections:
+
+```cpp
+Zef::Orm::DbConnection::SetConnectionParams(
+  "localhost", "5432", "mydb", "myuser", "mypassword"
+);
+```
+
+Environment variables can be used as a convenient alternative (see `src/main.cc` for a pattern
+using `getenv_or`).
+
+### Querying entities
+
+Use `Repository<T>::GetAll()` to fetch all rows for an entity:
+
+```cpp
+auto result = Zef::Orm::Repository<Zef::Entity::Category>::GetAll();
+if (result) {
+  for (const auto &item : *result) {
+    // access item fields via item.GetString("column") etc.
+  }
+}
+```
+
+### Shutdown
+
+Call `DbConnection::Shutdown()` at the end of `main()` to close all pooled connections cleanly:
+
+```cpp
+Zef::Orm::DbConnection::Shutdown();
+```
+
 
 ## How to build
-```
+```shell
+cp utils/setup_env_dist utils/setup_env
+# update utils/setup_env using your favourite editor
+
 source utils/setup_env
 mkdir build
 cd build
+
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
 # or
 cmake -G Ninja -DCMAKE_BUILD_TYPE=RELEASE ..
-ninja -j8
-ninja install
+
+ninja
 ```
