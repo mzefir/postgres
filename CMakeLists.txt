@@ -1,4 +1,8 @@
 include(cmake/Common.cmake)
+set(ProjectLibrary "zef${ProjectExecutable}")
+set(TestProjectTitle "${ProjectTitle}Tests")
+set(ProjectExecutableTestLib "testlib${ProjectExecutable}")
+set(TestProjectExecutable "tests-${ProjectExecutable}") # Executable name for subproject with tests
 cmake_minimum_required(VERSION ${CMakeMinVersion})
 
 project(${ProjectTitle} VERSION ${ProjectVersion} DESCRIPTION ${ProjectDescription})

@@ -4,14 +4,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(ProjectTitle "Postgresql ORM C++ Library")
 set(ProjectDescription "Project description")
-set(ProjectVersion "1.0.0")
+set(ProjectVersion "1.1.0")
 set(ProjectExecutable "postgres")
-set(ProjectLibrary "libpostgres")
-
-
-set(TestProjectTitle "${ProjectTitle}Tests")
-set(ProjectExecutableTestLib "testlib${ProjectExecutable}")
-set(TestProjectExecutable "tests-${ProjectExecutable}") # Executable name for subproject with tests
 
 # Project source files, insert only *.cc files. Do not add main.cc file but main.cc must be present in main directory.
 # 
