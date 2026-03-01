@@ -18,7 +18,7 @@ endif()
 # Library build for debug target has 'd' postfix
 FetchContent_Declare(
   "zefpostgres${DebugAppend}"
-  GIT_REPOSITORY ssh://git@localhost/git/zef/cpp-postgres.git
+  GIT_REPOSITORY git@github.com:mzefir/postgres.git
   GIT_TAG 1.0.0
 )
 ```
