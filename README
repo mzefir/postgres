@@ -1,10 +1,10 @@
-# Mini ORM for postgres
+# Mini ORM for PostgreSQL
 
 ## Overview
 A lightweight C++20 ORM library for PostgreSQL. It provides connection pooling via `DbConnection`,
 a typed `Repository<T>` for querying entities, and a schema/column abstraction built on top of `libpq`.
 
-## How to add this as library to your project
+## How to add this as a library to your project
 
 Add to your CMakeLists.txt:
 
@@ -57,6 +57,7 @@ if (result) {
 Entities inherit from `Zef::Orm::EntityBase` and must implement `GetTableName()` and `GetSchema()`.
 
 **Header** (`include/Entity/MyEntity.hpp`):
+
 ```cpp
 #pragma once
 #include "Orm/EntityBase.hpp"
@@ -79,6 +80,7 @@ private:
 ```
 
 **Source** (`src/Entity/MyEntity.cc`):
+
 ```cpp
 #include "Entity/MyEntity.hpp"
 #include "Orm/Column.hpp"
@@ -112,8 +114,8 @@ Call `DbConnection::Shutdown()` at the end of `main()` to close all pooled conne
 Zef::Orm::DbConnection::Shutdown();
 ```
 
-
 ## How to build
+
 ```shell
 cp utils/setup_env_dist utils/setup_env
 # update utils/setup_env using your favourite editor
