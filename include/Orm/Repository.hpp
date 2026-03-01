@@ -161,7 +161,7 @@ private:
     if (!rawResult) return false;
 
     const auto &data = (*rawResult)->GetData();
-    if (data.empty() || data[0].empty()) return false;
+    if (data.empty() || data[0].empty() || data[0][0].empty()) return false;
 
     entity.Set("id", std::stoi(data[0][0]));
     return true;
