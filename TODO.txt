@@ -1,4 +1,0 @@
-* Better jenkinsfile
-* format_repository.sh -> some todos inside file
-* example of documentation should be rewritten
-* names: executeble and library - should be possible to have the same names

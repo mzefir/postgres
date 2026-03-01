@@ -2,8 +2,8 @@ set(CMakeMinVersion "3.18")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(ProjectTitle "Postgresql ORM C++ Library")
-set(ProjectDescription "Project description")
+set(ProjectTitle "ZefPostgres")
+set(ProjectDescription "A lightweight C++20 ORM library for PostgreSQL.")
 set(ProjectVersion "1.1.0")
 set(ProjectExecutable "postgres")
 
@@ -21,13 +21,11 @@ set(ProjectOrmSrc
 )
 
 set(ProjectAppSrc
-  "src/Hello.cc"
   "src/Entity/Category.cc"
 )
 
 # Tests source files
 set(TestsSrc
-  "test/src/HelloTest.cc"
   "test/src/Orm/ColumnTest.cc"
   "test/src/Orm/TableSchemaTest.cc"
   "test/src/Orm/RepositoryTest.cc"
