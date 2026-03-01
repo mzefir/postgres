@@ -47,9 +47,62 @@ auto result = Zef::Orm::Repository<Zef::Entity::Category>::GetAll();
 if (result) {
   for (const auto &item : *result) {
     // access item fields via item.GetString("column") etc.
+    // auto &item in this context is Zef::Entity::Category &item.
   }
 }
 ```
+
+### How to create entity objects
+
+Entities inherit from `Zef::Orm::EntityBase` and must implement `GetTableName()` and `GetSchema()`.
+
+**Header** (`include/Entity/MyEntity.hpp`):
+```cpp
+#pragma once
+#include "Orm/EntityBase.hpp"
+
+namespace Zef::Entity {
+
+class MyEntity : public Zef::Orm::EntityBase {
+public:
+  MyEntity() = default;
+  ~MyEntity() override = default;
+
+  const std::string &GetTableName() const override;
+  const Zef::Orm::TableSchema *GetSchema() const override;
+
+private:
+  static const std::string s_tableName;
+};
+
+} // namespace Zef::Entity
+```
+
+**Source** (`src/Entity/MyEntity.cc`):
+```cpp
+#include "Entity/MyEntity.hpp"
+#include "Orm/Column.hpp"
+
+namespace Zef::Entity {
+
+const std::string MyEntity::s_tableName{"my_table"};
+
+const std::string &MyEntity::GetTableName() const { return s_tableName; }
+
+const Zef::Orm::TableSchema *MyEntity::GetSchema() const {
+  static const std::unique_ptr<Zef::Orm::TableSchema> s_schema = []() {
+    std::vector<std::unique_ptr<Zef::Orm::ColumnIf>> cols;
+    cols.push_back(std::make_unique<Zef::Orm::Column>("id",    Zef::Orm::ColumnType::Integer, Zef::Orm::ColumnFlags::IgnoreOnWrite));
+    cols.push_back(std::make_unique<Zef::Orm::Column>("title", Zef::Orm::ColumnType::Text,    Zef::Orm::ColumnFlags::Nullable));
+    return std::make_unique<Zef::Orm::TableSchema>(s_tableName, std::move(cols));
+  }();
+  return s_schema.get();
+}
+
+} // namespace Zef::Entity
+```
+
+Register the new `.cc` file in `cmake/Common.cmake` under `ProjectAppSrc`.
 
 ### Shutdown
 
