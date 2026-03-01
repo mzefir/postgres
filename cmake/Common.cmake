@@ -36,4 +36,5 @@ set(TestsSrc
   "test/src/HelloTest.cc"
   "test/src/Orm/ColumnTest.cc"
   "test/src/Orm/TableSchemaTest.cc"
+  "test/src/Orm/RepositoryTest.cc"
 )

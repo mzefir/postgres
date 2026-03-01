@@ -14,6 +14,9 @@ public:
 
   virtual std::optional<std::unique_ptr<RawResultIf>> GetAll(const std::string &query) = 0;
   virtual std::optional<std::unique_ptr<RawResultIf>> GetAll(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) = 0;
+
+  virtual bool Exec(const std::string &query) = 0;
+  virtual bool Exec(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) = 0;
 };
 
 } // namespace Zef::Orm

@@ -7,6 +7,7 @@
 #include "Orm/TableSchema.hpp"
 #include <algorithm>
 #include <concepts>
+#include <functional>
 #include <iomanip>
 #include <map>
 #include <memory>
@@ -22,6 +23,36 @@ template<typename T>
   requires std::derived_from<T, EntityIf>
 class Repository {
 public:
+  static bool Save(T &entity) {
+    const auto id = entity.Id();
+    if (!id || *id == 0) return Insert(entity);
+    return Update(entity);
+  }
+
+  static bool Delete(T &entity) {
+    const auto id = entity.Id();
+    if (!id || *id == 0) return false;
+
+    const auto *schema = entity.GetSchema();
+    if (!schema) return false;
+
+    const std::string query = "DELETE FROM " + schema->GetTableName() + " WHERE id = $1";
+
+    unsigned char sha1[SHA_DIGEST_LENGTH];
+    SHA1(reinterpret_cast<const unsigned char *>(query.c_str()), query.size(), sha1);
+    std::ostringstream stmtName;
+    stmtName << std::hex << std::setfill('0');
+    for (unsigned char byte : sha1) stmtName << std::setw(2) << static_cast<int>(byte);
+
+    auto conn = CreateConnection();
+    if (!conn) return false;
+
+    if (!conn->Exec(query, stmtName.str(), {std::to_string(*id)})) return false;
+
+    entity.Set("id", 0);
+    return true;
+  }
+
   static std::optional<std::vector<T>> GetAll() {
     return GetAll(std::string{}, 0);
   }
@@ -72,7 +103,116 @@ public:
     return GetAll(query, schema, params);
   }
 
+#ifdef UNITTEST
+public:
+  static void SetConnectionFactory(std::function<std::unique_ptr<DbConnectionIf>()> factory) { s_connectionFactory = std::move(factory); }
+#endif
+
 private:
+  static inline std::function<std::unique_ptr<DbConnectionIf>()> s_connectionFactory;
+
+  static std::unique_ptr<DbConnectionIf> CreateConnection() {
+    if (s_connectionFactory) return s_connectionFactory();
+    return DbConnection::CreateConnection();
+  }
+
+  static bool Insert(T &entity) {
+    const auto *schema = entity.GetSchema();
+    if (!schema) return false;
+
+    std::string cols;
+    std::string placeholders;
+    std::vector<std::string> params;
+    int idx = 1;
+    bool first = true;
+
+    for (const auto &col : schema->GetColumns()) {
+      if (col->GetFlags() & ColumnFlags::IgnoreOnWrite) continue;
+
+      if (!first) { cols += ", "; placeholders += ", "; }
+      cols += col->GetName();
+      placeholders += "$" + std::to_string(idx++);
+      first = false;
+
+      std::string strVal;
+      switch (col->GetType()) {
+        case ColumnType::Integer: { auto v = entity.GetInt(col->GetName());    if (v) strVal = std::to_string(*v); break; }
+        case ColumnType::Boolean: { auto v = entity.GetBool(col->GetName());   if (v) strVal = *v ? "true" : "false"; break; }
+        case ColumnType::Float:   { auto v = entity.GetFloat(col->GetName());  if (v) strVal = std::to_string(*v); break; }
+        case ColumnType::Text:    { auto v = entity.GetString(col->GetName()); if (v) strVal = *v; break; }
+      }
+      params.push_back(std::move(strVal));
+    }
+
+    if (idx == 1) return false;
+
+    const std::string query = "INSERT INTO " + schema->GetTableName() + " (" + cols + ") VALUES (" + placeholders + ") RETURNING id";
+
+    unsigned char sha1[SHA_DIGEST_LENGTH];
+    SHA1(reinterpret_cast<const unsigned char *>(query.c_str()), query.size(), sha1);
+    std::ostringstream stmtName;
+    stmtName << std::hex << std::setfill('0');
+    for (unsigned char byte : sha1) stmtName << std::setw(2) << static_cast<int>(byte);
+
+    auto conn = CreateConnection();
+    if (!conn) return false;
+
+    auto rawResult = conn->GetAll(query, stmtName.str(), params);
+    if (!rawResult) return false;
+
+    const auto &data = (*rawResult)->GetData();
+    if (data.empty() || data[0].empty()) return false;
+
+    entity.Set("id", std::stoi(data[0][0]));
+    return true;
+  }
+
+  static bool Update(const T &entity) {
+    const auto *schema = entity.GetSchema();
+    if (!schema) return false;
+
+    const auto id = entity.Id();
+    if (!id) return false;
+
+    std::string assignments;
+    std::vector<std::string> params;
+    int idx = 1;
+    bool first = true;
+
+    for (const auto &col : schema->GetColumns()) {
+      if (col->GetFlags() & ColumnFlags::IgnoreOnWrite) continue;
+
+      if (!first) assignments += ", ";
+      assignments += col->GetName() + " = $" + std::to_string(idx++);
+      first = false;
+
+      std::string strVal;
+      switch (col->GetType()) {
+        case ColumnType::Integer: { auto v = entity.GetInt(col->GetName());    if (v) strVal = std::to_string(*v); break; }
+        case ColumnType::Boolean: { auto v = entity.GetBool(col->GetName());   if (v) strVal = *v ? "true" : "false"; break; }
+        case ColumnType::Float:   { auto v = entity.GetFloat(col->GetName());  if (v) strVal = std::to_string(*v); break; }
+        case ColumnType::Text:    { auto v = entity.GetString(col->GetName()); if (v) strVal = *v; break; }
+      }
+      params.push_back(std::move(strVal));
+    }
+
+    if (idx == 1) return false;
+
+    params.push_back(std::to_string(*id));
+    const std::string query = "UPDATE " + schema->GetTableName() + " SET " + assignments + " WHERE id = $" + std::to_string(idx);
+
+    unsigned char sha1[SHA_DIGEST_LENGTH];
+    SHA1(reinterpret_cast<const unsigned char *>(query.c_str()), query.size(), sha1);
+    std::ostringstream stmtName;
+    stmtName << std::hex << std::setfill('0');
+    for (unsigned char byte : sha1) stmtName << std::setw(2) << static_cast<int>(byte);
+
+    auto conn = CreateConnection();
+    if (!conn) return false;
+
+    return conn->Exec(query, stmtName.str(), params);
+  }
+
   static std::string BuildQuery(const TableSchema *schema, const std::map<std::string, std::string> &filters, const std::string &sortBy, int limit) {
     std::string query = "SELECT ";
     bool first = true;
@@ -104,7 +244,7 @@ private:
   static std::optional<std::vector<T>> GetAll(const std::string &query, const TableSchema *schema) {
     if (!schema) return std::nullopt;
 
-    auto conn = DbConnection::CreateConnection();
+    auto conn = CreateConnection();
     if (!conn) return std::nullopt;
 
     auto rawResult = conn->GetAll(query);
@@ -122,7 +262,7 @@ private:
     stmtName << std::hex << std::setfill('0');
     for (unsigned char byte : sha1) stmtName << std::setw(2) << static_cast<int>(byte);
 
-    auto conn = DbConnection::CreateConnection();
+    auto conn = CreateConnection();
     if (!conn) return std::nullopt;
 
     auto rawResult = conn->GetAll(query, stmtName.str(), params);

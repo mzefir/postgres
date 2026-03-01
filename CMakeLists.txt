@@ -28,6 +28,7 @@ add_executable (${TestProjectExecutable}
   "test/src/main.cc" ${TestsSrc}
 )
 set_property(TARGET ${TestProjectExecutable} PROPERTY CXX_STANDARD 20)
+target_compile_definitions(${TestProjectExecutable} PRIVATE UNITTEST=1)
 target_link_libraries(${TestProjectExecutable} PRIVATE ${ProjectExecutableTestLib} ${ProjectExternalLibraries} GTest::gtest GTest::gmock)
 add_dependencies(${TestProjectExecutable} ${ProjectExecutableTestLib} GTest::gtest GTest::gmock)
 

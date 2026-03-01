@@ -20,6 +20,9 @@ public:
   std::optional<std::unique_ptr<RawResultIf>> GetAll(const std::string &query) override;
   std::optional<std::unique_ptr<RawResultIf>> GetAll(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) override;
 
+  bool Exec(const std::string &query) override;
+  bool Exec(const std::string &query, const std::string &stmtName, const std::vector<std::string> &params) override;
+
 protected:
   explicit DbConnection(PGconn *conn);
 
