@@ -413,4 +413,83 @@ TEST_F(RepositoryGetAllTest, GetAll_WithLimit_BuildsLimitClause) {
   EXPECT_TRUE(CategoryRepo::GetAll(std::string{}, 5).has_value());
 }
 
+class RepositoryGetTest : public Test {
+protected:
+  void TearDown() override { CategoryRepo::SetConnectionFactory(nullptr); }
+};
+
+TEST_F(RepositoryGetTest, Get_ReturnsNullopt_WhenConnectionFails) {
+  CategoryRepo::SetConnectionFactory([]() -> std::unique_ptr<Zef::Orm::DbConnectionIf> { return nullptr; });
+
+  EXPECT_EQ(CategoryRepo::Get(42), std::nullopt);
+}
+
+TEST_F(RepositoryGetTest, Get_ReturnsNullopt_WhenQueryFails) {
+  auto mockConn = std::make_unique<NiceMock<ConnectionMock>>();
+  auto *connPtr = mockConn.get();
+
+  EXPECT_CALL(*connPtr, GetAll(_, _, _)).WillOnce(Return(std::nullopt));
+
+  CategoryRepo::SetConnectionFactory([&]() -> std::unique_ptr<Zef::Orm::DbConnectionIf> { return std::move(mockConn); });
+
+  EXPECT_EQ(CategoryRepo::Get(42), std::nullopt);
+}
+
+TEST_F(RepositoryGetTest, Get_ReturnsNullopt_WhenNoMatchingRow) {
+  auto mockConn   = std::make_unique<NiceMock<ConnectionMock>>();
+  auto *connPtr   = mockConn.get();
+  auto mockResult = std::make_unique<NiceMock<RawResultMock>>();
+
+  static const std::vector<std::string>              colNames{"id", "title"};
+  static const std::vector<std::vector<std::string>> data{};
+
+  EXPECT_CALL(*mockResult, GetColumnNames()).WillRepeatedly(ReturnRef(colNames));
+  EXPECT_CALL(*mockResult, GetData()).WillRepeatedly(ReturnRef(data));
+  EXPECT_CALL(*connPtr, GetAll(_, _, _))
+    .WillOnce(Return(ByMove(std::optional<std::unique_ptr<Zef::Orm::RawResultIf>>(std::move(mockResult)))));
+
+  CategoryRepo::SetConnectionFactory([&]() -> std::unique_ptr<Zef::Orm::DbConnectionIf> { return std::move(mockConn); });
+
+  EXPECT_EQ(CategoryRepo::Get(42), std::nullopt);
+}
+
+TEST_F(RepositoryGetTest, Get_ReturnsEntity_OnSuccess) {
+  auto mockConn   = std::make_unique<NiceMock<ConnectionMock>>();
+  auto *connPtr   = mockConn.get();
+  auto mockResult = std::make_unique<NiceMock<RawResultMock>>();
+
+  static const std::vector<std::string>              colNames{"id", "title"};
+  static const std::vector<std::vector<std::string>> data{{"42", "Electronics"}};
+
+  EXPECT_CALL(*mockResult, GetColumnNames()).WillRepeatedly(ReturnRef(colNames));
+  EXPECT_CALL(*mockResult, GetData()).WillRepeatedly(ReturnRef(data));
+  EXPECT_CALL(*connPtr, GetAll(_, _, _))
+    .WillOnce(Return(ByMove(std::optional<std::unique_ptr<Zef::Orm::RawResultIf>>(std::move(mockResult)))));
+
+  CategoryRepo::SetConnectionFactory([&]() -> std::unique_ptr<Zef::Orm::DbConnectionIf> { return std::move(mockConn); });
+
+  const auto result = CategoryRepo::Get(42);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result->Id(), 42);
+  EXPECT_EQ(result->GetString("title"), "Electronics");
+}
+
+TEST_F(RepositoryGetTest, Get_BuildsQuery_WithIdFilter_AndLimit1) {
+  auto mockConn   = std::make_unique<NiceMock<ConnectionMock>>();
+  auto *connPtr   = mockConn.get();
+  auto mockResult = std::make_unique<NiceMock<RawResultMock>>();
+
+  static const std::vector<std::string>              colNames{"id", "title"};
+  static const std::vector<std::vector<std::string>> data{{"42", "Books"}};
+
+  EXPECT_CALL(*mockResult, GetColumnNames()).WillRepeatedly(ReturnRef(colNames));
+  EXPECT_CALL(*mockResult, GetData()).WillRepeatedly(ReturnRef(data));
+  EXPECT_CALL(*connPtr, GetAll(AllOf(HasSubstr("WHERE"), HasSubstr("id = $1"), HasSubstr("LIMIT 1")), _, ElementsAre("42")))
+    .WillOnce(Return(ByMove(std::optional<std::unique_ptr<Zef::Orm::RawResultIf>>(std::move(mockResult)))));
+
+  CategoryRepo::SetConnectionFactory([&]() -> std::unique_ptr<Zef::Orm::DbConnectionIf> { return std::move(mockConn); });
+
+  EXPECT_TRUE(CategoryRepo::Get(42).has_value());
+}
+
 } // namespace Zef::Testing::Orm
