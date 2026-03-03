@@ -15,6 +15,11 @@ FetchContent_Declare(
   GIT_TAG 1.4.3
 )
 FetchContent_Declare(
+  "zefutility${DebugAppend}"
+  GIT_REPOSITORY git@github.com:mzefir/cpp-utility.git
+  GIT_TAG 1.1.0
+)
+FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG v1.14.0
@@ -22,6 +27,7 @@ FetchContent_Declare(
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable("zeflogger${DebugAppend}")
+FetchContent_MakeAvailable("zefutility${DebugAppend}")
 FetchContent_MakeAvailable(googletest)
 
 find_package(PostgreSQL REQUIRED)
@@ -29,6 +35,7 @@ find_package(OpenSSL REQUIRED)
 
 set(ProjectExternalLibraries
   "zeflogger${DebugAppend}"
+  "zefutility${DebugAppend}"
   PostgreSQL::PostgreSQL
   OpenSSL::Crypto
 )

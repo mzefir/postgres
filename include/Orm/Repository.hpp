@@ -53,6 +53,12 @@ public:
     return true;
   }
 
+  static std::optional<T> Get(int id) {
+    auto result = GetAll({{"id", std::to_string(id)}}, {}, 1);
+    if (result && result->size() == 1) return (*result)[0];
+    return std::nullopt;
+  }
+
   static std::optional<std::vector<T>> GetAll() {
     return GetAll(std::string{}, 0);
   }
@@ -136,10 +142,11 @@ private:
 
       std::string strVal;
       switch (col->GetType()) {
-        case ColumnType::Integer: { auto v = entity.GetInt(col->GetName());    if (v) strVal = std::to_string(*v); break; }
-        case ColumnType::Boolean: { auto v = entity.GetBool(col->GetName());   if (v) strVal = *v ? "true" : "false"; break; }
-        case ColumnType::Float:   { auto v = entity.GetFloat(col->GetName());  if (v) strVal = std::to_string(*v); break; }
-        case ColumnType::Text:    { auto v = entity.GetString(col->GetName()); if (v) strVal = *v; break; }
+        case ColumnType::Integer: { auto v = entity.GetInt(col->GetName());     if (v) strVal = std::to_string(*v); break; }
+        case ColumnType::Boolean: { auto v = entity.GetBool(col->GetName());    if (v) strVal = *v ? "true" : "false"; break; }
+        case ColumnType::Float:   { auto v = entity.GetFloat(col->GetName());   if (v) strVal = std::to_string(*v); break; }
+        case ColumnType::Text:    { auto v = entity.GetString(col->GetName());  if (v) strVal = *v; break; }
+        case ColumnType::Decimal: { auto v = entity.GetDecimal(col->GetName()); if (v) strVal = v->ToString(); break; }
       }
       params.push_back(std::move(strVal));
     }
@@ -188,10 +195,11 @@ private:
 
       std::string strVal;
       switch (col->GetType()) {
-        case ColumnType::Integer: { auto v = entity.GetInt(col->GetName());    if (v) strVal = std::to_string(*v); break; }
-        case ColumnType::Boolean: { auto v = entity.GetBool(col->GetName());   if (v) strVal = *v ? "true" : "false"; break; }
-        case ColumnType::Float:   { auto v = entity.GetFloat(col->GetName());  if (v) strVal = std::to_string(*v); break; }
-        case ColumnType::Text:    { auto v = entity.GetString(col->GetName()); if (v) strVal = *v; break; }
+        case ColumnType::Integer: { auto v = entity.GetInt(col->GetName());     if (v) strVal = std::to_string(*v); break; }
+        case ColumnType::Boolean: { auto v = entity.GetBool(col->GetName());    if (v) strVal = *v ? "true" : "false"; break; }
+        case ColumnType::Float:   { auto v = entity.GetFloat(col->GetName());   if (v) strVal = std::to_string(*v); break; }
+        case ColumnType::Text:    { auto v = entity.GetString(col->GetName());  if (v) strVal = *v; break; }
+        case ColumnType::Decimal: { auto v = entity.GetDecimal(col->GetName()); if (v) strVal = v->ToString(); break; }
       }
       params.push_back(std::move(strVal));
     }
@@ -289,6 +297,7 @@ private:
           case ColumnType::Boolean: entity.Set(columnNames[i], row[i] == "t" || row[i] == "true" || row[i] == "1"); break;
           case ColumnType::Float:   entity.Set(columnNames[i], std::stof(row[i])); break;
           case ColumnType::Text:    entity.Set(columnNames[i], row[i]); break;
+          case ColumnType::Decimal: entity.Set(columnNames[i], Zef::Math::Decimal{row[i]}); break;
         }
       }
       result.push_back(std::move(entity));
