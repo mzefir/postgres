@@ -16,6 +16,7 @@ public:
   std::optional<float> GetFloat(const std::string &columnName) const override;
   std::optional<std::string> GetString(const std::string &columnName) const override;
   std::optional<Zef::Math::Decimal> GetDecimal(const std::string &columnName) const override;
+  std::optional<long long> GetLongLong(const std::string &columnName) const override;
   std::optional<int> Id() const override;
 
   using EntityIf::Set;
@@ -25,6 +26,7 @@ public:
   void Set(const std::string &columnName, float value) override;
   void Set(const std::string &columnName, std::string value) override;
   void Set(const std::string &columnName, Zef::Math::Decimal value) override;
+  void Set(const std::string &columnName, long long value) override;
 
 protected:
   std::unordered_map<std::string, ColumnValue> m_data;

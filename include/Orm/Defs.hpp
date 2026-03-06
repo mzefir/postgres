@@ -9,7 +9,8 @@ enum class ColumnType {
   Boolean,
   Float,
   Text,
-  Decimal
+  Decimal,
+  BigInteger
 };
 
 enum class ColumnFlags : uint8_t {

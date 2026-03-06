@@ -38,6 +38,12 @@ std::optional<Zef::Math::Decimal> EntityBase::GetDecimal(const std::string &colu
   return std::get<Zef::Math::Decimal>(*val);
 }
 
+std::optional<long long> EntityBase::GetLongLong(const std::string &columnName) const {
+  auto val = Get(columnName);
+  if (!val || !std::holds_alternative<long long>(*val)) return std::nullopt;
+  return std::get<long long>(*val);
+}
+
 void EntityBase::Set(const std::string &columnName, int value) {
   Set(columnName, EntityBase::ColumnValue{value});
 }
@@ -56,6 +62,10 @@ void EntityBase::Set(const std::string &columnName, std::string value) {
 
 void EntityBase::Set(const std::string &columnName, Zef::Math::Decimal value) {
   Set(columnName, EntityBase::ColumnValue{std::move(value)});
+}
+
+void EntityBase::Set(const std::string &columnName, long long value) {
+  Set(columnName, EntityBase::ColumnValue{value});
 }
 
 void EntityBase::Set(const std::string &columnName, ColumnValue value) {

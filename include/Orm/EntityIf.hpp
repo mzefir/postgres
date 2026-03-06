@@ -10,7 +10,7 @@ namespace Zef::Orm {
 
 class EntityIf {
 public:
-  using ColumnValue = std::variant<int, bool, float, std::string, Zef::Math::Decimal>;
+  using ColumnValue = std::variant<int, bool, float, std::string, Zef::Math::Decimal, long long>;
 
   virtual ~EntityIf() = default;
 
@@ -20,6 +20,7 @@ public:
   virtual std::optional<float> GetFloat(const std::string &columnName) const = 0;
   virtual std::optional<std::string> GetString(const std::string &columnName) const = 0;
   virtual std::optional<Zef::Math::Decimal> GetDecimal(const std::string &columnName) const = 0;
+  virtual std::optional<long long> GetLongLong(const std::string &columnName) const = 0;
   virtual const std::string &GetTableName() const = 0;
   virtual const TableSchema *GetSchema() const = 0;
   virtual std::optional<int> Id() const = 0;
@@ -30,6 +31,7 @@ public:
   virtual void Set(const std::string &columnName, float value) = 0;
   virtual void Set(const std::string &columnName, std::string value) = 0;
   virtual void Set(const std::string &columnName, Zef::Math::Decimal value) = 0;
+  virtual void Set(const std::string &columnName, long long value) = 0;
 };
 
 } // namespace Zef::Orm
