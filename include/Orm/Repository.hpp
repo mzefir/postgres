@@ -29,6 +29,12 @@ public:
     return Update(entity);
   }
 
+  static bool Save(const TableSchema *schema, T &entity) {
+    const auto id = entity.Id();
+    if (!id || *id == 0) return Insert(schema, entity);
+    return Update(schema, entity);
+  }
+
   static bool Delete(T &entity) {
     const auto id = entity.Id();
     if (!id || *id == 0) return false;
@@ -77,6 +83,14 @@ public:
     return GetAll(query, schema, params);
   }
 
+  static std::optional<T> GetFirstRaw(const std::string &query) {
+    return FirstOf(GetAllRaw(query + " LIMIT 1"));
+  }
+
+  static std::optional<T> GetFirstRaw(const std::string &query, const std::vector<std::string> &params) {
+    return FirstOf(GetAllRaw(query + " LIMIT 1", params));
+  }
+
   static std::optional<std::vector<T>> GetAll(const std::string &sortBy) {
     return GetAll(sortBy, 0);
   }
@@ -85,28 +99,83 @@ public:
   }
   static std::optional<std::vector<T>> GetAll(const std::string &sortBy, int limit) {
     T proto;
-    const auto *schema = proto.GetSchema();
-    if (!schema) return std::nullopt;
-
-    const std::string query = BuildQuery(schema, {}, sortBy, limit);
-
-    return GetAll(query, schema);
+    return GetAll(proto.GetSchema(), sortBy, limit);
   }
   static std::optional<std::vector<T>> GetAll(const std::map<std::string, std::string> &filters, int limit) {
     return GetAll(filters, {}, limit);
   }
   static std::optional<std::vector<T>> GetAll(const std::map<std::string, std::string> &filters, const std::string &sortBy, int limit) {
     T proto;
-    const auto *schema = proto.GetSchema();
+    return GetAll(proto.GetSchema(), filters, sortBy, limit);
+  }
+
+  static std::optional<T> Get(const TableSchema *schema, int id) {
+    auto result = GetAll(schema, {{"id", std::to_string(id)}}, {}, 1);
+    if (result && result->size() == 1) return (*result)[0];
+    return std::nullopt;
+  }
+
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema) {
+    return GetAll(schema, std::string{}, 0);
+  }
+
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::string &sortBy) {
+    return GetAll(schema, sortBy, 0);
+  }
+
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::map<std::string, std::string> &filters) {
+    return GetAll(schema, filters, {}, 0);
+  }
+
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::string &sortBy, int limit) {
     if (!schema) return std::nullopt;
+    const std::string query = BuildQuery(schema, {}, sortBy, limit);
+    return GetAll(query, schema);
+  }
 
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::map<std::string, std::string> &filters, int limit) {
+    return GetAll(schema, filters, {}, limit);
+  }
+
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::map<std::string, std::string> &filters, const std::string &sortBy, int limit) {
+    if (!schema) return std::nullopt;
     const std::string query = BuildQuery(schema, filters, sortBy, limit);
-
     std::vector<std::string> params;
     params.reserve(filters.size());
     for (const auto &[_, val] : filters) params.push_back(val);
-
     return GetAll(query, schema, params);
+  }
+
+  static std::optional<T> GetFirst() {
+    return FirstOf(GetAll(std::string{}, 1));
+  }
+
+  static std::optional<T> GetFirst(const std::string &sortBy) {
+    return FirstOf(GetAll(sortBy, 1));
+  }
+
+  static std::optional<T> GetFirst(const std::map<std::string, std::string> &filters) {
+    return FirstOf(GetAll(filters, {}, 1));
+  }
+
+  static std::optional<T> GetFirst(const std::map<std::string, std::string> &filters, const std::string &sortBy) {
+    return FirstOf(GetAll(filters, sortBy, 1));
+  }
+
+  static std::optional<T> GetFirst(const TableSchema *schema) {
+    return FirstOf(GetAll(schema, std::string{}, 1));
+  }
+
+  static std::optional<T> GetFirst(const TableSchema *schema, const std::string &sortBy) {
+    return FirstOf(GetAll(schema, sortBy, 1));
+  }
+
+  static std::optional<T> GetFirst(const TableSchema *schema, const std::map<std::string, std::string> &filters) {
+    return FirstOf(GetAll(schema, filters, {}, 1));
+  }
+
+  static std::optional<T> GetFirst(const TableSchema *schema, const std::map<std::string, std::string> &filters, const std::string &sortBy) {
+    return FirstOf(GetAll(schema, filters, sortBy, 1));
   }
 
 #ifdef UNITTEST
@@ -122,8 +191,16 @@ private:
     return DbConnection::CreateConnection();
   }
 
+  static std::optional<T> FirstOf(std::optional<std::vector<T>> result) {
+    if (result && !result->empty()) return std::move((*result)[0]);
+    return std::nullopt;
+  }
+
   static bool Insert(T &entity) {
-    const auto *schema = entity.GetSchema();
+    return Insert(entity.GetSchema(), entity);
+  }
+
+  static bool Insert(const TableSchema *schema, T &entity) {
     if (!schema) return false;
 
     std::string cols;
@@ -175,7 +252,10 @@ private:
   }
 
   static bool Update(const T &entity) {
-    const auto *schema = entity.GetSchema();
+    return Update(entity.GetSchema(), entity);
+  }
+
+  static bool Update(const TableSchema *schema, const T &entity) {
     if (!schema) return false;
 
     const auto id = entity.Id();
