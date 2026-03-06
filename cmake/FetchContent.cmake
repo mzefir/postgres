@@ -17,7 +17,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   "zefutility${DebugAppend}"
   GIT_REPOSITORY git@github.com:mzefir/cpp-utility.git
-  GIT_TAG 1.1.0
+  GIT_TAG 1.2.0
 )
 FetchContent_Declare(
   googletest
