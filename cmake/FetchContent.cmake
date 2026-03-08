@@ -12,7 +12,7 @@ set(INSTALL_GTEST OFF)
 FetchContent_Declare(
   "zeflogger${DebugAppend}"
   GIT_REPOSITORY https://gitlab.com/sidobado/logger.git
-  GIT_TAG 1.4.3
+  GIT_TAG 1.5.3
 )
 FetchContent_Declare(
   "zefutility${DebugAppend}"

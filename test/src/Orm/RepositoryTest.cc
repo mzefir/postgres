@@ -392,7 +392,7 @@ TEST_F(RepositoryGetAllTest, GetAll_WithFilters_BuildsWhereClause) {
 
   CategoryRepo::SetConnectionFactory([&]() -> std::unique_ptr<Zef::Orm::DbConnectionIf> { return std::move(mockConn); });
 
-  EXPECT_TRUE(CategoryRepo::GetAll({{"title", "Books"}}).has_value());
+  EXPECT_TRUE(CategoryRepo::GetAll({{"title", "=", "Books"}}).has_value());
 }
 
 TEST_F(RepositoryGetAllTest, GetAll_WithLimit_BuildsLimitClause) {
@@ -627,7 +627,7 @@ TEST_F(RepositoryGetAllWithSchemaTest, GetAll_WithSchema_WithFilters_BuildsWhere
 
   CategoryRepo::SetConnectionFactory([&]() -> std::unique_ptr<Zef::Orm::DbConnectionIf> { return std::move(mockConn); });
 
-  EXPECT_TRUE(CategoryRepo::GetAll(CategorySchema(), {{"title", "Books"}}, {}, 0).has_value());
+  EXPECT_TRUE(CategoryRepo::GetAll(CategorySchema(), {{"title", "=", "Books"}}, {}, 0).has_value());
 }
 
 TEST_F(RepositoryGetAllWithSchemaTest, GetAll_WithSchema_WithLimit_BuildsLimitClause) {
@@ -735,7 +735,7 @@ TEST_F(RepositoryGetFirstTest, GetFirst_WithFilters_BuildsWhereClause) {
 
   CategoryRepo::SetConnectionFactory([&]() -> std::unique_ptr<Zef::Orm::DbConnectionIf> { return std::move(mockConn); });
 
-  CategoryRepo::GetFirst({{"title", "Books"}});
+  CategoryRepo::GetFirst({{"title", "=", "Books"}});
 }
 
 TEST_F(RepositoryGetFirstTest, GetFirst_WithSortBy_BuildsOrderByClause) {

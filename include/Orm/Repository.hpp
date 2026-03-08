@@ -3,13 +3,13 @@
 #include "Orm/DbConnection.hpp"
 #include "Orm/Defs.hpp"
 #include "Orm/EntityIf.hpp"
+#include "Orm/Filter.hpp"
 #include "Orm/RawResultIf.hpp"
 #include "Orm/TableSchema.hpp"
 #include <algorithm>
 #include <concepts>
 #include <functional>
 #include <iomanip>
-#include <map>
 #include <memory>
 #include <openssl/sha.h>
 #include <optional>
@@ -60,7 +60,7 @@ public:
   }
 
   static std::optional<T> Get(int id) {
-    auto result = GetAll({{"id", std::to_string(id)}}, {}, 1);
+    auto result = GetAll({Filter{"id", "=", std::to_string(id)}}, {}, 1);
     if (result && result->size() == 1) return (*result)[0];
     return std::nullopt;
   }
@@ -94,23 +94,23 @@ public:
   static std::optional<std::vector<T>> GetAll(const std::string &sortBy) {
     return GetAll(sortBy, 0);
   }
-  static std::optional<std::vector<T>> GetAll(const std::map<std::string, std::string> &filters) {
+  static std::optional<std::vector<T>> GetAll(const std::vector<Filter> &filters) {
     return GetAll(filters, {}, 0);
   }
   static std::optional<std::vector<T>> GetAll(const std::string &sortBy, int limit) {
     T proto;
     return GetAll(proto.GetSchema(), sortBy, limit);
   }
-  static std::optional<std::vector<T>> GetAll(const std::map<std::string, std::string> &filters, int limit) {
+  static std::optional<std::vector<T>> GetAll(const std::vector<Filter> &filters, int limit) {
     return GetAll(filters, {}, limit);
   }
-  static std::optional<std::vector<T>> GetAll(const std::map<std::string, std::string> &filters, const std::string &sortBy, int limit) {
+  static std::optional<std::vector<T>> GetAll(const std::vector<Filter> &filters, const std::string &sortBy, int limit) {
     T proto;
     return GetAll(proto.GetSchema(), filters, sortBy, limit);
   }
 
   static std::optional<T> Get(const TableSchema *schema, int id) {
-    auto result = GetAll(schema, {{"id", std::to_string(id)}}, {}, 1);
+    auto result = GetAll(schema, {Filter{"id", "=", std::to_string(id)}}, {}, 1);
     if (result && result->size() == 1) return (*result)[0];
     return std::nullopt;
   }
@@ -123,7 +123,7 @@ public:
     return GetAll(schema, sortBy, 0);
   }
 
-  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::map<std::string, std::string> &filters) {
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::vector<Filter> &filters) {
     return GetAll(schema, filters, {}, 0);
   }
 
@@ -133,16 +133,16 @@ public:
     return GetAll(query, schema);
   }
 
-  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::map<std::string, std::string> &filters, int limit) {
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::vector<Filter> &filters, int limit) {
     return GetAll(schema, filters, {}, limit);
   }
 
-  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::map<std::string, std::string> &filters, const std::string &sortBy, int limit) {
+  static std::optional<std::vector<T>> GetAll(const TableSchema *schema, const std::vector<Filter> &filters, const std::string &sortBy, int limit) {
     if (!schema) return std::nullopt;
     const std::string query = BuildQuery(schema, filters, sortBy, limit);
     std::vector<std::string> params;
     params.reserve(filters.size());
-    for (const auto &[_, val] : filters) params.push_back(val);
+    for (const auto &f : filters) params.push_back(f.Value);
     return GetAll(query, schema, params);
   }
 
@@ -154,11 +154,11 @@ public:
     return FirstOf(GetAll(sortBy, 1));
   }
 
-  static std::optional<T> GetFirst(const std::map<std::string, std::string> &filters) {
+  static std::optional<T> GetFirst(const std::vector<Filter> &filters) {
     return FirstOf(GetAll(filters, {}, 1));
   }
 
-  static std::optional<T> GetFirst(const std::map<std::string, std::string> &filters, const std::string &sortBy) {
+  static std::optional<T> GetFirst(const std::vector<Filter> &filters, const std::string &sortBy) {
     return FirstOf(GetAll(filters, sortBy, 1));
   }
 
@@ -170,11 +170,11 @@ public:
     return FirstOf(GetAll(schema, sortBy, 1));
   }
 
-  static std::optional<T> GetFirst(const TableSchema *schema, const std::map<std::string, std::string> &filters) {
+  static std::optional<T> GetFirst(const TableSchema *schema, const std::vector<Filter> &filters) {
     return FirstOf(GetAll(schema, filters, {}, 1));
   }
 
-  static std::optional<T> GetFirst(const TableSchema *schema, const std::map<std::string, std::string> &filters, const std::string &sortBy) {
+  static std::optional<T> GetFirst(const TableSchema *schema, const std::vector<Filter> &filters, const std::string &sortBy) {
     return FirstOf(GetAll(schema, filters, sortBy, 1));
   }
 
@@ -303,7 +303,7 @@ private:
     return conn->Exec(query, stmtName.str(), params);
   }
 
-  static std::string BuildQuery(const TableSchema *schema, const std::map<std::string, std::string> &filters, const std::string &sortBy, int limit) {
+  static std::string BuildQuery(const TableSchema *schema, const std::vector<Filter> &filters, const std::string &sortBy, int limit) {
     std::string query = "SELECT ";
     bool first = true;
     for (const auto &col : schema->GetColumns()) {
@@ -318,9 +318,9 @@ private:
       query += " WHERE ";
       int idx = 1;
       bool first2 = true;
-      for (const auto &[col, _] : filters) {
+      for (const auto &f : filters) {
         if (!first2) query += " AND ";
-        query += col + " = $" + std::to_string(idx++);
+        query += f.Field + " " + f.Op + " $" + std::to_string(idx++);
         first2 = false;
       }
     }
